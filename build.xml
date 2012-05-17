@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<project name="AntExample" default="compile">
+	<property environment="env" />
+	
+	<property name="src.main.java.dir" value="src/main/java" />
+	<property name="build.dir" value="build" />
+	<property name="build.java.dir" value="${build.dir}/classes" />
+	<property name="lib.junit.dir" value="C:/Users/siguremon/dev/junit4.10" />
+	<property name="src.test.java.dir" value="src/test/java" />
+	<property name="build.test.dir" value="${build.dir}/test-classes" />
+	<property name="result.dir" value="${build.dir}/result" />
+	<property name="result.test.dir" value="${result.dir}/test" />
+	
+	<path id="base.classpath">
+	</path>
+	
+	<path id="test.classpath">
+		<fileset dir="${lib.junit.dir}" includes="*.jar" />
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+	
+	<target name="init">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.java.dir}" />
+		<mkdir dir="${build.test.dir}" />
+		<mkdir dir="${result.dir}" />
+	</target>
+	
+	<target name="compile" depends="init">
+		<javac destdir="${build.java.dir}" encoding="utf-8" includeAntRuntime="off">
+			<!-- includeAntRuntime Ant自身が持つclasspathを無効に -->
+			<src path="${src.main.java.dir}" />
+			<classpath refid="base.classpath" />
+		</javac>
+		<echo>run compile</echo>
+	</target>
+	
+	<target name="test-compile" depends="compile">
+		<javac destdir="${build.test.dir}" encoding="utf-8" includeAntRuntime="off">
+			<src path="${src.test.java.dir}" />
+			<!-- refid 事前に定義したパス類似構造（path）を参照する -->
+			<classpath refid="test.classpath" />
+			<!-- location 単一のディレクトリを指定 -->
+			<classpath location="${build.java.dir}" />
+		</javac>
+	</target>
+	
+	<target name="test" depends="test-compile">
+		<delete dir="${result.test.dir}" />
+		<mkdir dir="${result.test.dir}" />
+		
+		<junit>
+			<classpath location="${build.test.dir}" />
+			<classpath location="${build.java.dir}" />
+			<classpath refid="test.classpath" />
+			
+			<formatter type="xml" />
+			<batchtest todir="${result.test.dir}">
+				<fileset dir="${build.test.dir}" />
+			</batchtest>
+		</junit>
+			
+		<junitreport>
+			<fileset dir="${result.test.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="noframes" todir="${result.test.dir}" />
+			<!-- format frames or noframes -->
+		</junitreport>
+	</target>
+</project>
