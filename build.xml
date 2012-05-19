@@ -95,12 +95,15 @@
 			<classpath location="${build.java.dir}" />
 			<classpath refid="test.classpath" />
 
+			<!-- junitの結果をxmlで出力 -->
 			<formatter type="xml" />
+			<!-- filset要素でincludeしたテストクラスを実行 -->
 			<batchtest todir="${build.result.test.dir}">
 				<fileset dir="${build.test.dir}" />
 			</batchtest>
 		</junit>
 
+		<!-- junitの結果を基にレポートを出力 -->
 		<junitreport todir="${build.result.test.dir}">
 			<fileset dir="${build.result.test.dir}">
 				<include name="TEST-*.xml" />
