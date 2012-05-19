@@ -12,8 +12,9 @@
 	<property name="src.test.java.dir" value="src/test/java" />
 	<property name="build.test.dir" value="${build.dir}/test-classes" />
 	<property name="build.result.dir" value="${build.dir}/result" />
-	<property name="build.result.test.dir" value="${result.dir}/test" />
+	<property name="build.result.test.dir" value="${build.result.dir}/test" />
 
+	<!-- classpath -->
 	<path id="base.classpath">
 	</path>
 
@@ -21,21 +22,25 @@
 		<fileset dir="${lib.junit.dir}" includes="*.jar" />
 	</path>
 
-	<!-- settings for ivy -->
+	<!-- properties for ivy -->
 	<property name="ivy.version" value="2.2.0" />
 	<property name="ivy.dir" value="lib_ivy" />
 	<property name="ivy.jar" value="ivy-${ivy.version}.jar" />
 
+	<!-- ivyが存在するかチェックする -->
 	<target name="check.ivy.exist">
 		<available file="${ivy.dir}/${ivy.jar}" property="skip.download.ivy" />
 	</target>
 
+	<!-- ivyが存在しない場合、ivyをダウンロード -->
+	<!-- unless属性に設定されているプロパティが存在する場合、実行しない  -->
 	<target name="download.ivy" depends="check.ivy.exist" unless="skip.download.ivy">
 		<mkdir dir="${ivy.dir}" />
 		<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/${ivy.jar}"
 			dest="${ivy.dir}/${ivy.jar}" />
 	</target>
 
+	<!-- ivy用のタスクを設定 -->
 	<target name="def.antlib" depends="download.ivy">
 		<path id="ivy.lib.dir">
 			<fileset dir="${ivy.dir}" includes="*.jar" />
@@ -43,6 +48,7 @@
 		<taskdef uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.dir" />
 	</target>
 
+	<!-- ivy.xmlを基にivyで依存関係を解決 -->
 	<target name="resolve" depends="def.antlib">
 		<ivy:retrieve />
 	</target>
@@ -95,7 +101,7 @@
 			</batchtest>
 		</junit>
 
-		<junitreport>
+		<junitreport todir="${build.result.test.dir}">
 			<fileset dir="${build.result.test.dir}">
 				<include name="TEST-*.xml" />
 			</fileset>
