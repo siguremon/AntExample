@@ -1,35 +1,67 @@
 <?xml version="1.0"?>
-<project name="AntExample" default="compile">
+<project name="AntExample" default="compile"
+	xmlns:ivy="antlib:org.apache.ivy.ant">
+
 	<property environment="env" />
-	
+
 	<property name="src.main.java.dir" value="src/main/java" />
 	<property name="build.dir" value="build" />
 	<property name="build.java.dir" value="${build.dir}/classes" />
-	<property name="lib.junit.dir" value="C:/Users/siguremon/dev/junit4.10" />
+	<property name="lib.dir" value="lib" />
+	<property name="lib.junit.dir" value="${lib.dir}" />
 	<property name="src.test.java.dir" value="src/test/java" />
 	<property name="build.test.dir" value="${build.dir}/test-classes" />
-	<property name="result.dir" value="${build.dir}/result" />
-	<property name="result.test.dir" value="${result.dir}/test" />
-	
+	<property name="build.result.dir" value="${build.dir}/result" />
+	<property name="build.result.test.dir" value="${result.dir}/test" />
+
 	<path id="base.classpath">
 	</path>
-	
+
 	<path id="test.classpath">
 		<fileset dir="${lib.junit.dir}" includes="*.jar" />
 	</path>
 
+	<!-- settings for ivy -->
+	<property name="ivy.version" value="2.2.0" />
+	<property name="ivy.dir" value="lib_ivy" />
+	<property name="ivy.jar" value="ivy-${ivy.version}.jar" />
+
+	<target name="check.ivy.exist">
+		<available file="${ivy.dir}/${ivy.jar}" property="skip.download.ivy" />
+	</target>
+
+	<target name="download.ivy" depends="check.ivy.exist" unless="skip.download.ivy">
+		<mkdir dir="${ivy.dir}" />
+		<get src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/${ivy.jar}"
+			dest="${ivy.dir}/${ivy.jar}" />
+	</target>
+
+	<target name="def.antlib" depends="download.ivy">
+		<path id="ivy.lib.dir">
+			<fileset dir="${ivy.dir}" includes="*.jar" />
+		</path>
+		<taskdef uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.dir" />
+	</target>
+
+	<target name="resolve" depends="def.antlib">
+		<ivy:retrieve />
+	</target>
+
 	<target name="clean">
+		<delete dir="${lib.dir}" />
+		<delete dir="${ivy.dir}" />
 		<delete dir="${build.dir}" />
 	</target>
-	
+
 	<target name="init">
+		<mkdir dir="${lib.dir}" />
 		<mkdir dir="${build.dir}" />
 		<mkdir dir="${build.java.dir}" />
 		<mkdir dir="${build.test.dir}" />
-		<mkdir dir="${result.dir}" />
+		<mkdir dir="${build.result.dir}" />
 	</target>
-	
-	<target name="compile" depends="init">
+
+	<target name="compile" depends="init,resolve">
 		<javac destdir="${build.java.dir}" encoding="utf-8" includeAntRuntime="off">
 			<!-- includeAntRuntime Ant自身が持つclasspathを無効に -->
 			<src path="${src.main.java.dir}" />
@@ -37,7 +69,7 @@
 		</javac>
 		<echo>run compile</echo>
 	</target>
-	
+
 	<target name="test-compile" depends="compile">
 		<javac destdir="${build.test.dir}" encoding="utf-8" includeAntRuntime="off">
 			<src path="${src.test.java.dir}" />
@@ -47,27 +79,27 @@
 			<classpath location="${build.java.dir}" />
 		</javac>
 	</target>
-	
+
 	<target name="test" depends="test-compile">
-		<delete dir="${result.test.dir}" />
-		<mkdir dir="${result.test.dir}" />
-		
+		<delete dir="${build.result.test.dir}" />
+		<mkdir dir="${build.result.test.dir}" />
+
 		<junit>
 			<classpath location="${build.test.dir}" />
 			<classpath location="${build.java.dir}" />
 			<classpath refid="test.classpath" />
-			
+
 			<formatter type="xml" />
-			<batchtest todir="${result.test.dir}">
+			<batchtest todir="${build.result.test.dir}">
 				<fileset dir="${build.test.dir}" />
 			</batchtest>
 		</junit>
-			
+
 		<junitreport>
-			<fileset dir="${result.test.dir}">
+			<fileset dir="${build.result.test.dir}">
 				<include name="TEST-*.xml" />
 			</fileset>
-			<report format="noframes" todir="${result.test.dir}" />
+			<report format="noframes" todir="${build.result.test.dir}" />
 			<!-- format frames or noframes -->
 		</junitreport>
 	</target>
